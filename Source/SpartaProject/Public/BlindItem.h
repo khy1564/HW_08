@@ -2,20 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "BaseItem.h"
-#include "HealingItem.generated.h"
-
+#include "BlindItem.generated.h"
 
 UCLASS()
-class SPARTAPROJECT_API AHealingItem : public ABaseItem
+class SPARTAPROJECT_API ABlindItem : public ABaseItem
 {
 	GENERATED_BODY()
-
 public:
-	AHealingItem();
+	ABlindItem();
 
 	virtual void ActivateItem(AActor* Activator) override;
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item")
-	int32 HealAmount;
+	float BlindTime;
+
 };

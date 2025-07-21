@@ -29,13 +29,36 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "UI")
 	UWidgetComponent* OverheadWidget;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Effect|Blind")
+	TSubclassOf<UUserWidget> BlindWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Effect|Blind")
+	UUserWidget* BlindWidgetInstance;
+
 	// 현재 체력을 가져오는 함수
-	UFUNCTION(BlueprintPure, Category = "Health")
+	UFUNCTION(BlueprintPure, Category = "Effect|Health")
 	float GetHealth() const;
 
 	// 체력을 회복시키는 함수
-	UFUNCTION(BlueprintCallable, Category = "Health")
+	UFUNCTION(BlueprintCallable, Category = "Effect|Health")
 	void AddHealth(float Amount);
+
+	// 이동속도를 감소하는 함수
+	UFUNCTION(BlueprintCallable, Category = "Effect|Slow")
+	void SlowEffect(float Amount, float SlowTime);
+	UFUNCTION(BlueprintCallable, Category = "Effect|Slow")
+	void StartSlowMove();
+	UFUNCTION(BlueprintCallable, Category = "Effect|Slow")
+	void StopSlowMove();
+
+	UFUNCTION(BlueprintCallable, Category = "Effect|Reversal")
+	void ReversalEffect(float ReversalTime);
+	UFUNCTION(BlueprintCallable, Category = "Effect|Reversal")
+	void StopReversalMove();
+
+	UFUNCTION(BlueprintCallable, Category = "Effect|Blind")
+	void BlindEffect(float BlindTime);
+	UFUNCTION(BlueprintCallable, Category = "Effect|Blind")
+	void StopBlind();
 	
 
 protected:
@@ -46,8 +69,14 @@ protected:
 	float NormalSpeed; // 기본 걷기 속도
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float SprintSpeedMultiplier; // "기본 속도" 대비 몇 배로 빠르게 달릴지 결정
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")	float SprintSpeed; // 실제 스프린트 속도
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
-	float SprintSpeed; // 실제 스프린트 속도
+	float SlowSpeed; // 슬로우된 속도
+
+	FTimerHandle SlowTimerHandle;
+	FTimerHandle ReversalTimerHandle;
+	FTimerHandle BlindTimerHandle;
 
 	// 최대 체력
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "health")
@@ -81,10 +110,14 @@ protected:
 	UFUNCTION()
 	void StopSprint(const FInputActionValue& value);
 
+	
+
 	void OnDeath();
 	void UpdateOverheadHP();
 
 private:
 	int32 JumpCount;
 	float Sensitivity;
+	bool SlowState;
+	bool ReversalState;
 };

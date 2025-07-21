@@ -7,10 +7,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Components/TextBlock.h"
+#include "Blueprint/UserWidget.h"
+
 
 DEFINE_LOG_CATEGORY(LogSparta);
 
-ASpartaCharacter::ASpartaCharacter()
+ASpartaCharacter::ASpartaCharacter() : BlindWidgetClass(nullptr), BlindWidgetInstance(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -38,6 +40,8 @@ ASpartaCharacter::ASpartaCharacter()
 	SprintSpeedMultiplier = 1.7f;
 	SprintSpeed = NormalSpeed * SprintSpeedMultiplier;
 
+	SlowState = false;
+	SlowSpeed = NormalSpeed;
 
 	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 	JumpCount = 0;
@@ -45,6 +49,8 @@ ASpartaCharacter::ASpartaCharacter()
 
 	MaxHealth = 100.0f;
 	Health = MaxHealth;
+
+	ReversalState = false;
 }
 
 void ASpartaCharacter::BeginPlay()
@@ -64,6 +70,63 @@ void ASpartaCharacter::AddHealth(float Amount)
 	// 체력을 회복시킴. 최대 체력을 초과하지 않도록 제한함
 	Health = FMath::Clamp(Health + Amount, 0.0f, MaxHealth);
 	UpdateOverheadHP();
+}
+
+void ASpartaCharacter::SlowEffect(float Amount, float SlowTime)
+{
+	SlowState = true;
+	SlowSpeed = NormalSpeed * Amount;
+	StartSlowMove();
+	GetWorldTimerManager().ClearTimer(SlowTimerHandle);
+	GetWorldTimerManager().SetTimer(SlowTimerHandle, this, &ASpartaCharacter::StopSlowMove, SlowTime, false);
+}
+
+void ASpartaCharacter::StartSlowMove()
+{
+	GetCharacterMovement()->MaxWalkSpeed = SlowSpeed;
+}
+
+void ASpartaCharacter::StopSlowMove()
+{
+	SlowState = false;
+	GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
+}
+
+void ASpartaCharacter::ReversalEffect(float ReversalTime)
+{
+	ReversalState = true;
+	GetWorldTimerManager().ClearTimer(ReversalTimerHandle);
+	GetWorldTimerManager().SetTimer(ReversalTimerHandle, this, &ASpartaCharacter::StopReversalMove, ReversalTime, false);
+}
+
+void ASpartaCharacter::StopReversalMove()
+{
+	ReversalState = false;
+}
+
+void ASpartaCharacter::BlindEffect(float BlindTime)
+{
+	StopBlind();
+
+	if (BlindWidgetClass)
+	{
+		BlindWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), BlindWidgetClass);
+		if (BlindWidgetInstance)
+		{
+			BlindWidgetInstance->AddToViewport();
+			GetWorldTimerManager().ClearTimer(SlowTimerHandle);
+			GetWorld()->GetTimerManager().SetTimer(BlindTimerHandle, this, &ASpartaCharacter::StopBlind, BlindTime, false);
+		}
+	}
+}
+
+void ASpartaCharacter::StopBlind()
+{
+	if (BlindWidgetInstance)
+	{
+		BlindWidgetInstance->RemoveFromParent();
+		BlindWidgetInstance = nullptr;
+	}
 }
 
 void ASpartaCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -144,17 +207,32 @@ void ASpartaCharacter::Move(const FInputActionValue& value)
 	// 예) (X=1, Y=0) → 전진 / (X=-1, Y=0) → 후진 / (X=0, Y=1) → 오른쪽 / (X=0, Y=-1) → 왼쪽
 	const FVector2D MoveInput = value.Get<FVector2D>();
 
-
+	
+	
 	if (!FMath::IsNearlyZero(MoveInput.X))
 	{
 		// 캐릭터가 바라보는 방향(정면)으로 X축 이동
-		AddMovementInput(GetActorForwardVector(), MoveInput.X);
+		if (ReversalState)
+		{
+			AddMovementInput(GetActorForwardVector(), -MoveInput.X);
+		}
+		else
+		{
+			AddMovementInput(GetActorForwardVector(), MoveInput.X);
+		}	
 	}
 
 	if (!FMath::IsNearlyZero(MoveInput.Y))
 	{
 		// 캐릭터의 오른쪽 방향으로 Y축 이동
-		AddMovementInput(GetActorRightVector(), MoveInput.Y);
+		if (ReversalState)
+		{
+			AddMovementInput(GetActorRightVector(), -MoveInput.Y);
+		}
+		else
+		{
+			AddMovementInput(GetActorRightVector(), MoveInput.Y);
+		}		
 	}
 }
 
@@ -194,7 +272,7 @@ void ASpartaCharacter::StartSprint(const FInputActionValue& value)
 {
 	// Shift 키를 누른 순간 이 함수가 호출된다고 가정
 	// 스프린트 속도를 적용
-	if (GetCharacterMovement())
+	if (GetCharacterMovement() && !SlowState)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
 	}
@@ -204,7 +282,7 @@ void ASpartaCharacter::StopSprint(const FInputActionValue& value)
 {
 	// Shift 키를 뗀 순간 이 함수가 호출
 	// 평상시 속도로 복귀
-	if (GetCharacterMovement())
+	if (GetCharacterMovement() && !SlowState)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = NormalSpeed;
 	}

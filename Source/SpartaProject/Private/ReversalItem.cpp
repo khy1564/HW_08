@@ -1,14 +1,13 @@
-#include "HealingItem.h"
+#include "ReversalItem.h"
 #include "SpartaCharacter.h"
-#include "Kismet/GameplayStatics.h"
 
-AHealingItem::AHealingItem()
+AReversalItem::AReversalItem()
 {
-	HealAmount = 20;
-	ItemType = "Healing";
+	ReversalTime = 3.0f;
+	ItemType = "Reversaling";
 }
 
-void AHealingItem::ActivateItem(AActor* Activator)
+void AReversalItem::ActivateItem(AActor* Activator)
 {
 	Super::ActivateItem(Activator);
 
@@ -16,7 +15,7 @@ void AHealingItem::ActivateItem(AActor* Activator)
 	{
 		if (ASpartaCharacter* PlayerCharacter = Cast<ASpartaCharacter>(Activator))
 		{
-			PlayerCharacter->AddHealth(HealAmount);
+			PlayerCharacter->ReversalEffect(ReversalTime);
 		}
 
 		DestroyItem();

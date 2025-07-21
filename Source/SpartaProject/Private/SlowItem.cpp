@@ -1,14 +1,14 @@
-#include "HealingItem.h"
+#include "SlowItem.h"
 #include "SpartaCharacter.h"
-#include "Kismet/GameplayStatics.h"
 
-AHealingItem::AHealingItem()
+ASlowItem::ASlowItem()
 {
-	HealAmount = 20;
-	ItemType = "Healing";
+	SlowAmount = 0.5f;
+	SlowTime = 3.0f;
+	ItemType = "Slowing";
 }
 
-void AHealingItem::ActivateItem(AActor* Activator)
+void ASlowItem::ActivateItem(AActor* Activator)
 {
 	Super::ActivateItem(Activator);
 
@@ -16,7 +16,7 @@ void AHealingItem::ActivateItem(AActor* Activator)
 	{
 		if (ASpartaCharacter* PlayerCharacter = Cast<ASpartaCharacter>(Activator))
 		{
-			PlayerCharacter->AddHealth(HealAmount);
+			PlayerCharacter->SlowEffect(SlowAmount, SlowTime);
 		}
 
 		DestroyItem();

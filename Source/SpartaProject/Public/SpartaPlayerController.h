@@ -47,7 +47,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Menu|GameOver")
 	UUserWidget* GameOverMenuWidgetInstance;
 
-
 	UFUNCTION(BlueprintPure, Category = "HUD")
 	UUserWidget* GetHUDWidget() const;
 
@@ -64,10 +63,10 @@ public:
 	void ExitGame();
 
 	
+	
 	void RemoveWidgetInstance();
 
 protected:
 	virtual void BeginPlay() override;
 
-	
 };

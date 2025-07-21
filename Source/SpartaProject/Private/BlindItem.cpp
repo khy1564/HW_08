@@ -1,14 +1,14 @@
-#include "HealingItem.h"
+#include "BlindItem.h"
 #include "SpartaCharacter.h"
-#include "Kismet/GameplayStatics.h"
 
-AHealingItem::AHealingItem()
+
+
+ABlindItem::ABlindItem()
 {
-	HealAmount = 20;
-	ItemType = "Healing";
+	BlindTime = 3.0f;
 }
 
-void AHealingItem::ActivateItem(AActor* Activator)
+void ABlindItem::ActivateItem(AActor* Activator)
 {
 	Super::ActivateItem(Activator);
 
@@ -16,9 +16,11 @@ void AHealingItem::ActivateItem(AActor* Activator)
 	{
 		if (ASpartaCharacter* PlayerCharacter = Cast<ASpartaCharacter>(Activator))
 		{
-			PlayerCharacter->AddHealth(HealAmount);
+			PlayerCharacter->BlindEffect(BlindTime);
 		}
 
 		DestroyItem();
 	}
 }
+
+
