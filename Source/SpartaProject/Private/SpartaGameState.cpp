@@ -215,7 +215,6 @@ void ASpartaGameState::UpdateHUD()
 				}
 				if (UTextBlock* CoinText = Cast<UTextBlock>(HUDWidget->GetWidgetFromName(TEXT("Coin"))))
 				{
-					float CoinCount = GetWorldTimerManager().GetTimerRemaining(LevelTimerHandle);
 					CoinText->SetText(FText::FromString(FString::Printf(TEXT("%d / %d"), CollectedCoinCount, SpawnedCoinCount)));
 				}
 
