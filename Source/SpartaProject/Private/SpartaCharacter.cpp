@@ -12,7 +12,7 @@
 
 DEFINE_LOG_CATEGORY(LogSparta);
 
-ASpartaCharacter::ASpartaCharacter() : BlindWidgetClass(nullptr), BlindWidgetInstance(nullptr)
+ASpartaCharacter::ASpartaCharacter() : BlindWidgetClass(nullptr), BlindWidgetInstance(nullptr), DamageWidgetClass(nullptr), DamageWidgetInstance(nullptr)
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -114,7 +114,7 @@ void ASpartaCharacter::BlindEffect(float BlindTime)
 		if (BlindWidgetInstance)
 		{
 			BlindWidgetInstance->AddToViewport();
-			GetWorldTimerManager().ClearTimer(SlowTimerHandle);
+			GetWorldTimerManager().ClearTimer(BlindTimerHandle);
 			GetWorld()->GetTimerManager().SetTimer(BlindTimerHandle, this, &ASpartaCharacter::StopBlind, BlindTime, false);
 		}
 	}
@@ -126,6 +126,39 @@ void ASpartaCharacter::StopBlind()
 	{
 		BlindWidgetInstance->RemoveFromParent();
 		BlindWidgetInstance = nullptr;
+	}
+}
+
+void ASpartaCharacter::ShowDamage()
+{
+	DamageAnimFinish();
+	if (DamageWidgetClass)
+	{
+		DamageWidgetInstance = CreateWidget<UUserWidget>(GetWorld(), DamageWidgetClass);
+		if (DamageWidgetInstance)
+		{
+			DamageWidgetInstance->AddToViewport();
+			UFunction* DamageAnimFunc = DamageWidgetInstance->FindFunction(FName("DamageAnim"));
+			if (DamageAnimFunc)
+			{
+				
+				DamageWidgetInstance->ProcessEvent(DamageAnimFunc, nullptr);
+				GetWorldTimerManager().ClearTimer(DamageAnimTimerHandle);
+				GetWorld()->GetTimerManager().SetTimer(DamageAnimTimerHandle, this, &ASpartaCharacter::DamageAnimFinish, 1, false);
+
+			}
+			
+		}
+	}	
+}
+
+void ASpartaCharacter::DamageAnimFinish()
+{
+
+	if (DamageWidgetInstance)
+	{
+		DamageWidgetInstance->RemoveFromParent();
+		DamageWidgetInstance = nullptr;
 	}
 }
 
@@ -186,7 +219,9 @@ float ASpartaCharacter::TakeDamage(float DamageAmount, FDamageEvent const& Damag
 
 	// 체력을 데미지만큼 감소시키고, 0 이하로 떨어지지 않도록 Clamp
 	Health = FMath::Clamp(Health - DamageAmount, 0.0f, MaxHealth);
+	ShowDamage();
 	UpdateOverheadHP();
+	
 
 	// 체력이 0 이하가 되면 사망 처리
 	if (Health <= 0.0f)

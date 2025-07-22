@@ -34,6 +34,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Effect|Blind")
 	UUserWidget* BlindWidgetInstance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damage")
+	TSubclassOf<UUserWidget> DamageWidgetClass;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Damage")
+	UUserWidget* DamageWidgetInstance;
+
 	// 현재 체력을 가져오는 함수
 	UFUNCTION(BlueprintPure, Category = "Effect|Health")
 	float GetHealth() const;
@@ -59,6 +64,11 @@ public:
 	void BlindEffect(float BlindTime);
 	UFUNCTION(BlueprintCallable, Category = "Effect|Blind")
 	void StopBlind();
+
+	UFUNCTION(BlueprintCallable, Category = "Damage")	
+	void ShowDamage();
+	UFUNCTION(BlueprintCallable, Category = "Damage")
+	void DamageAnimFinish();
 	
 
 protected:
@@ -77,6 +87,7 @@ protected:
 	FTimerHandle SlowTimerHandle;
 	FTimerHandle ReversalTimerHandle;
 	FTimerHandle BlindTimerHandle;
+	FTimerHandle DamageAnimTimerHandle;
 
 	// 최대 체력
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "health")
